@@ -40,6 +40,7 @@
     margin: 0; font-size: 22px; letter-spacing: .08em; font-weight: 700; color: var(--plum);
   }
   .brand .sub { margin-top: 2px; color: var(--muted); font-size: 13px; }
+  .brand .note { margin-top: 2px; color: var(--muted); font-size: 12px; }
   .brand .sub b { color: var(--text); font-weight: 600; }
 
   .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -174,6 +175,7 @@
     <div class="brand">
       <h1>ДОКТОР ИРИНА СТАРКОВА</h1>
       <div class="sub"><span id="updated">обновлено сегодня</span> · <span id="range"></span></div>
+      <div class="note" id="note" hidden></div>
     </div>
     <div class="controls">
       <div class="seg" id="netSeg">
@@ -217,9 +219,9 @@ const GOAL_MONTHS = 3;
 const VIRAL_X = 10;
 const STRONG_X = 3;
 
-/* =====================  ВШИТЫЕ ДАННЫЕ (снимок таблицы от 28.09.2026)  ===================== */
+/* =====================  ВШИТЫЕ ДАННЫЕ (снимок таблицы от 30.09.2026)  ===================== */
 
-const SNAPSHOT_DATE = '2026-09-28';
+const SNAPSHOT_DATE = '2026-09-30';
 
 // Лист «Контент»: дата, соцсеть, формат, тема, охват, просмотры, лайки, комментарии, репосты, сохранения, подписки, переходы
 const EMBED_CONTENT = [
@@ -284,6 +286,30 @@ const EMBED_CONTENT = [
   ['13.04.2026','Instagram','Пост','Заблуждение о диете и холестерине',4785,7725,63,0,38,61,21,12],
   ['14.04.2026','Instagram','Рилс','Почему возвращается грибок на ногтях снова и снова',1081,1357,15,2,2,7,0,5],
   ['15.04.2026','Instagram','Пост','Холестерин ни в чем не виноват',792,1412,11,0,13,14,0,3],
+  ['16.04.2026','Instagram','Рилс','Ноготь на ноге может выдавать диабет раньше анализов',992,1235,9,0,2,7,1,1],
+  ['17.04.2026','Instagram','Пост','Проблема, которую списывают на возраст',5543,7612,31,2,22,38,1,7],
+  ['18.04.2026','Instagram','Рилс','Есть ли шанс дожить до 100 лет',889,920,5,0,3,3,0,7],
+  ['19.04.2026','Instagram','Пост','Противоречивые советы по питанию',1220,2257,19,0,18,20,2,8],
+  ['20.04.2026','Instagram','Рилс','Об этом молчат косметологи',942,1142,19,2,8,14,2,1],
+  ['21.04.2026','Instagram','Пост','Анализы в норме, а внутри - ощущение, что организм живет своей жизнью',2243,3438,29,1,22,27,0,5],
+  ['22.04.2026','Instagram','Рилс','Почему мерзнут руки и ноги и что это значит',1309,1508,17,2,5,10,1,3],
+  ['23.04.2026','Instagram','Пост','Пролемы с памятью?',980,1668,23,0,7,26,1,3],
+  ['24.04.2026','Instagram','Рилс','Секрет, который объясняет, почему вам холодно даже в жару',1402,1651,15,0,7,6,0,7],
+  ['25.04.2026','Instagram','Пост','Женская гормональная система и китайская медицина',16781,28501,543,1,496,768,264,221],
+  ['26.04.2026','Instagram','Рилс','Как распознать скрытые сигналы организма заранее',1619,1951,23,0,4,23,3,13],
+  ['27.04.2026','Instagram','Пост','Ваша реакция на стресс',3182,5781,107,1,74,126,12,28],
+  ['28.04.2026','Instagram','Рилс','Когда нужна помощь вашим почкам',1337,1553,18,0,8,9,3,5],
+  ['29.04.2026','Instagram','Пост','Кто вас так напугал?',61857,97538,1400,25,1757,1600,564,526],
+  ['01.05.2026','Instagram','Рилс','Как из кризиса вырос проект, который оздоровил тысячи людей',1145,1236,10,0,0,2,0,5],
+  ['02.05.2026','Instagram','Пост','Секрет китайских докторов в лечении болезней зубов',134253,216420,3700,38,8540,3800,792,834],
+  ['03.05.2026','Instagram','Рилс','Длинное видео про стариков',1134,1223,5,0,6,3,0,3],
+  ['04.05.2026','Instagram','Пост','Как улучшить зрение',36886,56904,1000,10,1036,1100,266,203],
+  ['05.05.2026','Instagram','Рилс','Ура, наш первый печатный журнал',1044,1155,9,1,0,1,1,2],
+  ['06.05.2026','Instagram','Пост','Аритмия и шейный отдел',43955,70487,864,22,783,1300,288,260],
+  ['07.05.2026','Instagram','Рилс','Это вредная привычка, от которой вы не захотите избавляться',1122,1300,14,1,6,5,1,2],
+  ['09.05.2026','Instagram','Пост','С Днем победы',995,1575,13,0,0,0,0,6],
+  ['10.05.2026','Instagram','Пост','О чем предупреждает тело, когда болит голова',39422,55054,506,4,771,583,80,76],
+  ['11.05.2026','Instagram','Рилс','Одна точка на стопе может согреть все тело',1495,1789,31,1,3,28,2,6],
 ];
 
 // Листы «Еженедельная статистика» и «Цели» в таблице пока не заполнены.
@@ -322,6 +348,8 @@ function num(v) {
 
 function parseDate(v) {
   if (!v) return null;
+  if (typeof v === 'number') return v > 20000 && v < 80000 ? new Date(1899, 11, 30 + Math.floor(v)) : null; // дата Excel
+
   const s = String(v).trim();
   let m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2,4})/);
   if (m) { let y = +m[3]; if (y < 100) y += 2000; return new Date(y, +m[2] - 1, +m[1]); }
@@ -740,6 +768,88 @@ function updatedText() {
 
 /* =====================  ОБНОВЛЕНИЕ ИЗ ТАБЛИЦЫ  ===================== */
 
+// Чтение .xlsx без библиотек: zip → DecompressionStream → XML
+async function unzip(buf) {
+  const dv = new DataView(buf), files = {};
+  let e = buf.byteLength - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('not zip');
+  let p = dv.getUint32(e + 16, true);
+  for (let i = 0, n = dv.getUint16(e + 10, true); i < n; i++) {
+    const method = dv.getUint16(p + 10, true), size = dv.getUint32(p + 20, true);
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+    const off = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(new Uint8Array(buf, p + 46, nl));
+    const start = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true);
+    files[name] = { method, data: new Uint8Array(buf, start, size) };
+    p += 46 + nl + xl + cl;
+  }
+  return files;
+}
+async function unzipText(f) {
+  if (!f) return '';
+  if (f.method === 0) return new TextDecoder().decode(f.data);
+  const stream = new Blob([f.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Response(stream).text();
+}
+async function readXlsx(buf) {
+  const files = await unzip(buf);
+  const xml = async name => new DOMParser().parseFromString(await unzipText(files[name]), 'application/xml');
+  const tags = (node, t) => Array.from(node.getElementsByTagNameNS('*', t));
+  const shared = files['xl/sharedStrings.xml']
+    ? tags(await xml('xl/sharedStrings.xml'), 'si').map(si => tags(si, 't').map(t => t.textContent).join('')) : [];
+  const rels = {};
+  tags(await xml('xl/_rels/workbook.xml.rels'), 'Relationship').forEach(r => { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
+  const sheets = {};
+  for (const sh of tags(await xml('xl/workbook.xml'), 'sheet')) {
+    const rid = sh.getAttribute('r:id') || sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+    const target = (rels[rid] || '').replace(/^\/?(xl\/)?/, 'xl/');
+    if (!files[target]) continue;
+    const rows = [];
+    for (const row of tags(await xml(target), 'row')) {
+      const r = [];
+      for (const c of tags(row, 'c')) {
+        const col = (c.getAttribute('r') || '').replace(/\d+/g, '');
+        let ci = 0; for (const ch of col) ci = ci * 26 + ch.charCodeAt(0) - 64; ci--;
+        const t = c.getAttribute('t'), v = tags(c, 'v')[0], raw = v ? v.textContent : '';
+        let val;
+        if (t === 's') val = shared[+raw] || '';
+        else if (t === 'inlineStr') val = tags(c, 't').map(x => x.textContent).join('');
+        else if (t === 'str' || t === 'b' || t === 'e') val = raw;
+        else val = raw === '' ? '' : +raw;
+        r[ci < 0 ? r.length : ci] = val;
+      }
+      rows[(+row.getAttribute('r') || rows.length + 1) - 1] = Array.from(r, x => x === undefined ? '' : x);
+    }
+    sheets[sh.getAttribute('name')] = Array.from(rows, x => x || []);
+  }
+  return sheets;
+}
+
+// Опубликованная страница на claude.ai: читаем таблицу через подключенный Google Drive
+const DRIVE = 'Google Drive';
+async function fetchViaDrive() {
+  if (!window.claude || !window.claude.use) return null;
+  const mcp = await window.claude.use('mcp').catch(() => null);
+  if (!mcp) return null;
+  const res = await mcp.callTool(DRIVE, 'download_file_content',
+    { fileId: SHEET_ID, exportMimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }, { cache: false });
+  const pl = res && res.payload;
+  const b64 = pl && typeof pl === 'object' ? pl.content : null;
+  if (!b64) throw { code: 'tool_error' };
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return readXlsx(bytes.buffer);
+}
+const DRIVE_HINT = {
+  server_not_connected: 'Чтобы обновлять цифры, подключите Google Drive: claude.ai → Настройки → Коннекторы.',
+  needs_reauth: 'Google Drive нужно переподключить: claude.ai → Настройки → Коннекторы.',
+  selection_required: 'Выберите, какой Google Drive использовать, в окне claude.ai и нажмите «Обновить» еще раз.',
+  not_in_manifest: 'Доступ к Google Drive для этой страницы выключен. Разрешите его и нажмите «Обновить» еще раз.',
+  consent_required: 'Разрешите странице доступ к Google Drive и нажмите «Обновить» еще раз.',
+};
+function setNote(text) { const n = $('#note'); n.textContent = text || ''; n.hidden = !text; }
+
 async function fetchText(url, ms = 9000) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
@@ -757,6 +867,17 @@ async function refresh() {
   btn.classList.add('busy');
   const got = {};
   const take = rows => { const k = detectSheet(rows); if (k && !got[k]) got[k] = rows; };
+  setNote('');
+  let hint = '';
+
+  // 0) через Google Drive (на claude.ai)
+  try {
+    const sheets = await fetchViaDrive();
+    if (sheets) Object.entries(SHEET_NAMES).forEach(([k, name]) => {
+      const key = Object.keys(sheets).find(n => low(n) === low(name));
+      if (key) got[k] = sheets[key];
+    });
+  } catch (err) { hint = DRIVE_HINT[err && err.code] || ''; }
 
   // 1) опубликованные CSV-ссылки
   await Promise.all(PUBLISHED_CSV_URLS.map(u => fetchText(u).then(t => take(parseCSV(t))).catch(() => {})));
@@ -771,7 +892,9 @@ async function refresh() {
   if (got.weekly) { state.weekly = normalizeWeekly(got.weekly); changed = true; }
   if (got.goals) { state.goals = normalizeGoals(got.goals); changed = true; }
   if (changed) state.updatedAt = new Date();
-  // если ничего не удалось прочитать — молча остаемся на вшитых цифрах
+  // если ничего не удалось прочитать — остаемся на вшитых цифрах без сообщения об ошибке;
+  // подсказка появляется, только когда ее можно исправить (подключить Google Drive)
+  else if (hint) setNote(hint);
 
   btn.classList.remove('busy');
   render();
