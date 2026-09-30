@@ -632,23 +632,23 @@ function render() {
 
   // --- Воронка
   const F = [
-    { t: 'Охват', v: sum(cur, 'reach'), c: 'var(--plum)' },
-    { t: 'Просмотры', v: sum(cur, 'views'), c: '#b86f8c' },
+    { t: 'Просмотры', v: sum(cur, 'views'), c: 'var(--plum)' },
+    { t: 'Охват', v: sum(cur, 'reach'), c: '#b86f8c' },
     { t: 'Вовлеченность', v: sum(cur, eng), c: 'var(--gold)' },
     { t: 'Подписки', v: sum(cur, 'subs'), c: 'var(--red)' },
   ];
   const widths = [100, 88, 74, 60];
   html += `<div class="card w12">
       <h2>Воронка: личный бренд</h2>
-      <p class="hint">Охват → просмотры → вовлеченность → подписки. Под стрелкой — какая доля дошла до следующего шага</p>
+      <p class="hint">Просмотры → охват → вовлеченность → подписки. Под стрелкой — какая доля дошла до следующего шага</p>
       <div class="funnel">${F.map((s, i) => {
         const step = `<div class="fstep"><div class="blk" style="background:${s.c};width:${widths[i]}%"><div class="n">${fmtK(s.v)}</div><div class="t">${s.t}</div></div></div>`;
         if (i === F.length - 1) return step;
         const conv = s.v ? F[i + 1].v / s.v * 100 : 0;
         return step + `<div class="farrow"><span class="ar">→</span><span class="pct">${fmtP(conv, conv < 10 ? 1 : 0)}</span><span>дошли</span></div>`;
       }).join('')}</div>
-      <div class="fnote">Вовлеченность — лайки + комментарии + сохранения. Просмотры могут быть больше охвата: один человек смотрит публикацию несколько раз.
-      От охвата до подписки в итоге доходит <b>${fmtP(F[0].v ? F[3].v / F[0].v * 100 : 0, 2)}</b>.</div>
+      <div class="fnote">Вовлеченность — лайки + комментарии + сохранения. Охват — сколько разных людей увидели публикации; просмотров больше, потому что один человек смотрит несколько раз.
+      От просмотров до подписки в итоге доходит <b>${fmtP(F[0].v ? F[3].v / F[0].v * 100 : 0, 2)}</b>.</div>
     </div>`;
 
   // --- Топ публикаций
