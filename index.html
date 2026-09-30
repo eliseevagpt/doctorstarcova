@@ -40,6 +40,14 @@
     margin: 0; font-size: 22px; letter-spacing: .08em; font-weight: 700; color: var(--plum);
   }
   .brand .sub { margin-top: 2px; color: var(--muted); font-size: 13px; }
+  .pubs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .pubs .lbl { color: var(--muted); font-size: 13px; margin-right: 2px; }
+  .pubs button {
+    font: inherit; font-size: 13px; color: var(--text); background: var(--card); cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+  }
+  .pubs button b { font-size: 15px; font-variant-numeric: tabular-nums; margin-left: 4px; }
+  .pubs button.on { border-color: var(--plum); background: var(--plum-soft); color: var(--plum); }
   .brand .note { margin-top: 2px; color: var(--muted); font-size: 12px; }
   .brand .sub b { color: var(--text); font-weight: 600; }
 
@@ -175,6 +183,7 @@
     <div class="brand">
       <h1>ДОКТОР ИРИНА СТАРКОВА</h1>
       <div class="sub"><span id="updated">обновлено сегодня</span> · <span id="range"></span></div>
+      <div class="pubs" id="pubs"></div>
       <div class="note" id="note" hidden></div>
     </div>
     <div class="controls">
@@ -511,6 +520,7 @@ function render() {
 
   if (!all.length) {
     $('#range').textContent = netTitle + ': данных пока нет';
+    $('#pubs').innerHTML = '';
     app.innerHTML = `<div class="card empty"><b>По ${netTitle} в таблице пока нет данных</b>
       Как только в листе «Контент» появятся строки с соцсетью «${netTitle}» (или заполнится блок ${netTitle.toUpperCase()}
       в «Еженедельной статистике»), нажмите «Обновить» — дашборд подхватит цифры.</div>`;
@@ -520,7 +530,14 @@ function render() {
   const rng = periodRange(all);
   const cur = inRange(all, rng.from, rng.to);
   const prev = rng.prevFrom ? inRange(all, rng.prevFrom, rng.prevTo) : null;
-  $('#range').textContent = `${netTitle}: ${dmy(cur.length ? rng.from : all[0].date)} — ${dmy(addDays(rng.to, -1))} · ${cur.length} публ.`;
+  $('#range').textContent = `${netTitle}: ${dmy(cur.length ? rng.from : all[0].date)} — ${dmy(addDays(rng.to, -1))}`;
+
+  // Количество публикаций за неделю / месяц / всё время (клик переключает период)
+  const endAll = addDays(all[all.length - 1].date, 1);
+  const counts = { week: inRange(all, addDays(endAll, -7), endAll).length, month: inRange(all, addDays(endAll, -30), endAll).length, all: all.length };
+  const PL = { week: 'за неделю', month: 'за месяц', all: 'за всё время' };
+  $('#pubs').innerHTML = '<span class="lbl">Публикаций:</span>' + Object.keys(PL).map(k =>
+    `<button data-v="${k}" class="${state.period === k ? 'on' : ''}" title="Показать период «${PL[k]}»">${PL[k]}<b>${counts[k]}</b></button>`).join('');
 
   const med = median(all.map(p => p.reach));
   const wk = (state.weekly[state.net] || {});
@@ -911,6 +928,10 @@ function bindSeg(id, key) {
 }
 bindSeg('#netSeg', 'net');
 bindSeg('#perSeg', 'period');
+$('#pubs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('#perSeg').querySelector(`button[data-v="${b.dataset.v}"]`).click();
+});
 $('#refresh').addEventListener('click', refresh);
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
 render();
