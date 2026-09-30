@@ -71,12 +71,12 @@
   .btn.busy .ico { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 14px 18px;
   }
-  .c2 { grid-column: span 2; } .c3 { grid-column: span 3; } .c6 { grid-column: span 6; }
+  .w3 { grid-column: span 3; } .w6 { grid-column: span 6; } .w12 { grid-column: span 12; }
   .card h2 { margin: 0 0 2px; font-size: 15px; font-weight: 600; }
   .card .hint { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
 
@@ -157,8 +157,8 @@
   footer { color: var(--muted); font-size: 12px; margin-top: 16px; text-align: center; }
 
   @media (max-width: 860px) {
-    .grid { grid-template-columns: 1fr; }
-    .c2, .c3, .c6 { grid-column: auto; }
+    .grid { grid-template-columns: 1fr 1fr; }
+    .w3 { grid-column: span 1; } .w6, .w12 { grid-column: span 2; }
     .tops { grid-template-columns: 1fr; }
     .plan { grid-template-columns: 1fr; }
     .funnel { flex-direction: column; }
@@ -479,8 +479,8 @@ function median(a) { if (!a.length) return 0; const s = [...a].sort((x, y) => x 
 function periodRange(all) {
   const last = all[all.length - 1].date;
   const end = addDays(last, 1); // не включая
-  if (state.period === 'week') return { from: addDays(end, -7), to: end, prevFrom: addDays(end, -14), prevTo: addDays(end, -7), label: 'прошлые 7 дней' };
-  if (state.period === 'month') return { from: addDays(end, -30), to: end, prevFrom: addDays(end, -60), prevTo: addDays(end, -30), label: 'прошлые 30 дней' };
+  if (state.period === 'week') return { from: addDays(end, -7), to: end, prevFrom: addDays(end, -14), prevTo: addDays(end, -7), label: 'прошлым 7 дням' };
+  if (state.period === 'month') return { from: addDays(end, -30), to: end, prevFrom: addDays(end, -60), prevTo: addDays(end, -30), label: 'прошлым 30 дням' };
   return { from: all[0].date, to: end, prevFrom: null, prevTo: null, label: '' };
 }
 const inRange = (list, a, b) => list.filter(p => p.date >= a && p.date < b);
@@ -499,7 +499,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 
 function delta(cur, prev, rng, isPct) {
   if (!rng.prevFrom) return `<div class="delta flat">за весь период</div>`;
-  if (prev === null || prev === undefined) return `<div class="delta flat">нет данных за ${rng.label}</div>`;
+  if (prev === null || prev === undefined) return `<div class="delta flat">нет данных за прошлый период</div>`;
   const diff = cur - prev;
   let txt;
   if (isPct) txt = (diff >= 0 ? '+' : '−') + Math.abs(diff).toFixed(1).replace('.', ',') + ' п.п.';
@@ -547,26 +547,32 @@ function render() {
   const sNow = sum(cur, 'subs'), sPrev = prev ? sum(prev, 'subs') : null;
   const eNow = erOf(cur), ePrev = prev && prev.length ? erOf(prev) : (prev ? null : null);
   const vNow = sum(cur, 'views'), vPrev = prev ? sum(prev, 'views') : null;
+  const cNow = sum(cur, 'clicks'), cPrev = prev ? sum(prev, 'clicks') : null;
 
   let html = `<div class="grid">
-    <div class="card c2 kpi">
+    <div class="card w3 kpi">
       <div class="label">Подписчики${lastSubs ? ' · всего ' + fmtN(lastSubs) : ''}</div>
       <div class="value">+${fmtN(sNow)}</div>
       ${delta(sNow, sPrev, rng)}
     </div>
-    <div class="card c2 kpi">
+    <div class="card w3 kpi">
       <div class="label">Вовлеченность (ER)</div>
       <div class="value">${eNow.toFixed(1).replace('.', ',')}<small>%</small></div>
       ${delta(eNow, ePrev, rng, true)}
     </div>
-    <div class="card c2 kpi">
+    <div class="card w3 kpi">
       <div class="label">Просмотры</div>
       <div class="value">${fmtK(vNow)}</div>
       ${delta(vNow, vPrev, rng)}
+    </div>
+    <div class="card w3 kpi">
+      <div class="label">Клики по ссылке в био</div>
+      <div class="value">${fmtN(cNow)}</div>
+      ${delta(cNow, cPrev, rng)}
     </div>`;
 
   // --- Рост подписчиков по неделям
-  html += `<div class="card c6">
+  html += `<div class="card w12">
       <h2>Рост подписчиков по неделям</h2>
       <p class="hint" id="growthHint"></p>
       <div class="chart-wrap" id="growth"></div>
@@ -578,7 +584,7 @@ function render() {
   const fmtKeys = Object.keys(fmts).sort((a, b) => fmts[b].length - fmts[a].length);
   const colorOf = k => k === 'Рилс' ? 'var(--plum)' : k === 'Посты' ? 'var(--gold)' : 'var(--red)';
 
-  html += `<div class="card c3">
+  html += `<div class="card w6">
       <h2>Микс контента</h2>
       <p class="hint">Доля форматов среди публикаций за период</p>
       ${cur.length ? `<div class="donut-row">${donut(fmtKeys.map(k => ({ v: fmts[k].length, c: colorOf(k) })), cur.length)}
@@ -590,7 +596,7 @@ function render() {
   // --- Сравнение форматов
   const avg = fmtKeys.map(k => ({ k, v: sum(fmts[k], 'reach') / fmts[k].length, m: median(fmts[k].map(p => p.reach)), n: fmts[k].length }));
   const maxAvg = Math.max(1, ...avg.map(a => a.v));
-  html += `<div class="card c3">
+  html += `<div class="card w6">
       <h2>Сравнение форматов</h2>
       <p class="hint">Средний охват на одну публикацию</p>
       <div class="bars">${avg.map(a => `<div class="bar">
@@ -607,7 +613,7 @@ function render() {
     { t: 'Подписки', v: sum(cur, 'subs'), c: 'var(--red)' },
   ];
   const widths = [100, 88, 74, 60];
-  html += `<div class="card c6">
+  html += `<div class="card w12">
       <h2>Воронка: личный бренд</h2>
       <p class="hint">Охват → просмотры → вовлеченность → подписки. Под стрелкой — какая доля дошла до следующего шага</p>
       <div class="funnel">${F.map((s, i) => {
@@ -622,7 +628,7 @@ function render() {
 
   // --- Топ публикаций
   const top = [...cur].sort((a, b) => b.reach - a.reach).slice(0, 3);
-  html += `<div class="card c6">
+  html += `<div class="card w12">
       <h2>Топ публикаций</h2>
       <p class="hint">Три лучшие по охвату за период. Метка — сравнение с медианным охватом (${fmtN(med)}): вирусный ≥ ×${VIRAL_X}, сильный ≥ ×${STRONG_X}</p>
       ${top.length ? `<div class="tops">${top.map(p => { const c = classify(p, med); return `<div class="post">
@@ -634,7 +640,7 @@ function render() {
     </div>`;
 
   // --- Планирование
-  html += `<div class="card c6" id="planCard"></div></div>`;
+  html += `<div class="card w12" id="planCard"></div></div>`;
   app.innerHTML = html;
 
   drawGrowth(all, rng, wk);
