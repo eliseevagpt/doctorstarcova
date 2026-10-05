@@ -202,7 +202,7 @@
     <div class="controls">
       <div class="seg" id="netSeg">
         <button data-v="instagram" class="on">Instagram</button>
-        <button data-v="youtube">YouTube</button>
+        <button data-v="tiktok">TikTok</button>
         <button data-v="other">Другие</button>
       </div>
       <div class="seg" id="perSeg">
@@ -520,6 +520,7 @@ function netKey(s) {
   const t = low(s);
   if (/insta|инста/.test(t)) return 'instagram';
   if (/youtube|ютуб|you tube/.test(t)) return 'youtube';
+  if (/tik ?tok|тик ?ток/.test(t)) return 'tiktok';
   if (/канал/.test(t) && /вк|vk/.test(t)) return 'vkchan';
   if (/^(вк|vk)$/.test(t) || /вконтакте|vkontakte/.test(t)) return 'vk';
   if (/^(тг|tg)$/.test(t) || /телеграм|telegram/.test(t)) return 'tg';
@@ -530,7 +531,7 @@ function netKey(s) {
 
 // Вкладка «Другие»
 const OTHER_NETS = ['vk', 'vkchan', 'tg', 'max', 'ok'];
-const NET_NAME = { instagram: 'Instagram', youtube: 'YouTube', other: 'Другие соцсети', vk: 'ВК', vkchan: 'ВК-канал', tg: 'ТГ', max: 'Макс', ok: 'ОК' };
+const NET_NAME = { instagram: 'Instagram', youtube: 'YouTube', tiktok: 'TikTok', other: 'Другие соцсети', vk: 'ВК', vkchan: 'ВК-канал', tg: 'ТГ', max: 'Макс', ok: 'ОК' };
 const NET_COLOR = { vk: 'var(--plum)', vkchan: '#b86f8c', tg: 'var(--gold)', max: 'var(--red)', ok: '#7d6a3a' };
 
 function fmtName(s) {
@@ -685,7 +686,7 @@ function render() {
     if (isOther) { app.innerHTML = `<div class="card empty"><b>По другим соцсетям в таблице пока нет данных</b>
       Добавьте в лист «Контент» строки с соцсетью ВК, ВК-канал, ТГ, МАКС или ОК и нажмите «Обновить».</div>`; return; }
     app.innerHTML = `<div class="card empty"><b>По ${netTitle} в таблице пока нет данных</b>
-      Как только в листе «Контент» появятся строки с соцсетью «${netTitle}» (или заполнится блок ${netTitle.toUpperCase()}
+      Как только в листе «Контент» появятся строки с соцсетью «${netTitle}» (или заполнится блок ${({ instagram: 'ИНСТАГРАМ', tiktok: 'ТИКТОК' })[state.net] || netTitle.toUpperCase()}
       в «Еженедельной статистике»), нажмите «Обновить» — дашборд подхватит цифры.</div>`;
     return;
   }
