@@ -698,13 +698,10 @@ function render() {
 
   // Количество публикаций за неделю / месяц / всё время (клик переключает период)
   const endAll = addDays(all[all.length - 1].date, 1);
-  // На вкладке «Другие» один пост, вышедший в нескольких соцсетях, считаем один раз (по дате и теме)
-  const pubCount = list => isOther ? new Set(list.map(p => dmy(p.date) + '|' + low(p.topic).replace(/\s+/g, ' '))).size : list.length;
-  const lists = { week: inRange(all, addDays(endAll, -7), endAll), month: inRange(all, addDays(endAll, -30), endAll), all };
-  const counts = Object.fromEntries(Object.entries(lists).map(([k, l]) => [k, pubCount(l)]));
+  const counts = { week: inRange(all, addDays(endAll, -7), endAll).length, month: inRange(all, addDays(endAll, -30), endAll).length, all: all.length };
   const PL = { week: 'за неделю', month: 'за месяц', all: 'за всё время' };
   $('#pubs').innerHTML = '<span class="lbl">Публикаций:</span>' + Object.keys(PL).map(k =>
-    `<button data-v="${k}" class="${state.period === k ? 'on' : ''}" title="Показать период «${PL[k]}»${isOther ? ` · размещений в соцсетях: ${lists[k].length}` : ''}">${PL[k]}<b>${counts[k]}</b></button>`).join('');
+    `<button data-v="${k}" class="${state.period === k ? 'on' : ''}" title="Показать период «${PL[k]}»">${PL[k]}<b>${counts[k]}</b></button>`).join('');
 
   if (isOther) return renderOthers(cur, prev, rng);
 
@@ -848,7 +845,7 @@ function renderOthers(cur, prev, rng) {
       <td>${fmtP(erV(l))}</td></tr>`;
   html += `<div class="card w12">
       <h2>По соцсетям</h2>
-      <p class="hint">Сумма за период. Здесь считается каждое размещение, а в счётчике вверху пост, вышедший в нескольких соцсетях, — один раз. «—» — этой метрики нет в таблице (например, репостов в Максе и ВК-канале)</p>
+      <p class="hint">Сумма за период. «—» — этой метрики нет в таблице (например, репостов в Максе и ВК-канале)</p>
       ${byNet.length ? `<div class="tbl-wrap"><table class="nets">
         <thead><tr><th>Соцсеть</th><th>Публикаций</th><th>Просмотры</th><th>В среднем на публ.</th><th>Реакции</th><th>Комментарии</th><th>Репосты</th><th>Сохранения</th><th>Подписки</th><th>Вовлеченность</th></tr></thead>
         <tbody>${byNet.map(x => row(NET_NAME[x.n], x.l, NET_COLOR[x.n])).join('')}${byNet.length > 1 ? row('Всего', cur, '', true) : ''}</tbody>
