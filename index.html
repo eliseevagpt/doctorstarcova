@@ -98,6 +98,9 @@
   .donut-list { flex: 1; min-width: 160px; }
   .donut-list .row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--line); }
   .donut-list .row:last-child { border-bottom: 0; }
+  .donut-list .row { flex-wrap: wrap; }
+  .donut-list .nums { white-space: nowrap; }
+  .donut-list .where { flex-basis: 100%; color: var(--muted); font-size: 12px; margin: 2px 0 0 18px; }
   .donut-list .num { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .donut-list .cnt { color: var(--muted); font-size: 13px; margin-left: 6px; }
 
@@ -184,6 +187,8 @@
     .brand h1 { font-size: 19px; }
     .kpi .value { font-size: 28px; }
     .card { padding: 12px 14px; }
+    .donut-row { justify-content: center; }
+    .donut-list { min-width: 100%; }
     .controls { width: 100%; }
     .seg { flex: 1 1 auto; }
     .seg button { flex: 1; padding: 6px 8px; }
@@ -538,6 +543,8 @@ function fmtName(s) {
   const t = low(s);
   if (/рилс|reel/.test(t)) return 'Рилс';
   if (/пост|post|карусел/.test(t)) return 'Посты';
+  if (/клип|clip/.test(t)) return 'Клипы';
+  if (/видео|video/.test(t)) return 'Видео';
   if (!t) return 'Другое';
   return String(s).trim().replace(/^./, c => c.toUpperCase());
 }
@@ -830,6 +837,33 @@ function renderOthers(cur, prev, rng) {
     ${kpi('Реакции и лайки', fmtN(lNow), lNow, pv(l => sum(l, 'likes')))}
     ${kpi('Комментарии', fmtN(cNow), cNow, pv(l => sum(l, 'comments')))}
     ${kpi('Вовлеченность от просмотров', eNow.toFixed(1).replace('.', ',') + '<small>%</small>', eNow, pv(erV), true)}`;
+
+  // Микс контента: клипы, посты, видео
+  const FMT_COLOR = { 'Посты': 'var(--gold)', 'Клипы': 'var(--plum)', 'Видео': 'var(--red)' };
+  const fc = k => FMT_COLOR[k] || '#7d6a3a';
+  const fm = {};
+  cur.forEach(p => { (fm[p.fmt] = fm[p.fmt] || []).push(p); });
+  const fKeys = Object.keys(fm).sort((a, b) => fm[b].length - fm[a].length);
+  const whereFmt = l => OTHER_NETS.map(n => [n, l.filter(p => p.net === n).length]).filter(x => x[1]).map(([n, c]) => `${NET_NAME[n]} ${c}`).join(' · ');
+  html += `<div class="card w6">
+      <h2>Микс контента</h2>
+      <p class="hint">Доля форматов среди размещений за период</p>
+      ${cur.length ? `<div class="donut-row">${donut(fKeys.map(k => ({ v: fm[k].length, c: fc(k) })), cur.length)}
+        <div class="donut-list">${fKeys.map(k => `<div class="row"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${fc(k)};margin-right:8px"></i>${k}</span>
+          <span class="nums"><span class="num">${Math.round(fm[k].length / cur.length * 100)}%</span><span class="cnt">${fm[k].length} шт.</span></span>
+          <span class="where">${whereFmt(fm[k])}</span></div>`).join('')}</div></div>`
+      : '<p class="hint">За выбранный период публикаций нет.</p>'}
+    </div>`;
+  const fAvg = fKeys.map(k => ({ k, v: sum(fm[k], 'views') / fm[k].length, n: fm[k].length, e: erV(fm[k]) }));
+  const fMax = Math.max(1, ...fAvg.map(a => a.v));
+  html += `<div class="card w6">
+      <h2>Сравнение форматов</h2>
+      <p class="hint">Средние просмотры на одно размещение</p>
+      <div class="bars">${fAvg.map(a => `<div class="bar">
+        <div class="top"><span>${a.k}</span><b>${fmtN(a.v)}</b></div>
+        <div class="track"><div class="fill" style="width:${Math.max(2, a.v / fMax * 100)}%;background:${fc(a.k)}"></div></div>
+        <div class="meta">${a.n} шт. · вовлеченность ${fmtP(a.e)}</div></div>`).join('') || '<p class="hint">Нет данных за период.</p>'}</div>
+    </div>`;
 
   // Таблица по соцсетям
   const byNet = OTHER_NETS.map(n => ({ n, l: cur.filter(p => p.net === n) })).filter(x => x.l.length)
