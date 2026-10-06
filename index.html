@@ -167,6 +167,17 @@
   table.nets .mini { width: 70px; height: 6px; background: #f4efea; border-radius: 999px; overflow: hidden; }
   table.nets .mini > div { height: 100%; border-radius: 999px; }
   .badge.net { color: #fff; }
+  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; }
+  .theme { display: flex; gap: 12px; align-items: flex-start; }
+  .theme .rank { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--plum-soft); color: var(--plum); font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+  .theme:nth-child(-n+3) .rank { background: var(--plum); color: #fff; }
+  .theme .tbody { flex: 1; min-width: 0; }
+  .theme .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .theme .tname { font-weight: 600; }
+  .theme .top b { font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .theme .track { height: 6px; background: #f4efea; border-radius: 999px; overflow: hidden; }
+  .theme .fill { height: 100%; background: var(--gold); border-radius: 999px; }
+  .theme .meta { color: var(--muted); font-size: 12px; margin-top: 3px; overflow-wrap: anywhere; }
   .empty { text-align: center; padding: 28px 18px; color: var(--muted); }
   .empty b { display: block; color: var(--text); font-size: 18px; margin-bottom: 6px; }
 
@@ -176,6 +187,7 @@
     .grid { grid-template-columns: 1fr 1fr; }
     .w3 { grid-column: span 1; } .w6, .w12 { grid-column: span 2; }
     .tops { grid-template-columns: 1fr; }
+    .themes { grid-template-columns: 1fr; }
     .plan { grid-template-columns: 1fr; }
     .funnel { flex-direction: column; }
     .farrow { width: auto; flex-direction: row; gap: 8px; padding: 4px 0; }
@@ -816,6 +828,9 @@ function render() {
       </div>`; }).join('')}</div>` : '<p class="hint">За выбранный период публикаций нет.</p>'}
     </div>`;
 
+  // --- Топ-10 тем
+  html += topThemes(cur, true);
+
   // --- Планирование
   html += `<div class="card w12" id="planCard"></div></div>`;
   app.innerHTML = html;
@@ -910,8 +925,63 @@ function renderOthers(cur, prev, rng) {
         <div class="big">${fmtN(p.views)}<span>просмотров</span></div>
         <div class="stats"><span>реакции <b>${fmtN(p.likes)}</b></span><span>комм. <b>${fmtN(p.comments)}</b></span>${p.has.reposts ? `<span>репосты <b>${fmtN(p.reposts)}</b></span>` : ''}</div>
       </div>`).join('')}</div>` : '<p class="hint">За выбранный период публикаций нет.</p>'}
-    </div></div>`;
+    </div>`;
+  html += topThemes(cur, cur.some(p => p.has.subs)) + '</div>';
   $('#app').innerHTML = html;
+}
+
+// Темы: публикации группируются по ключевым словам в названии; одна публикация может попасть в несколько тем
+const THEMES = [
+  ['Суставы и позвоночник', /сустав|колен|артроз|позвоно|спин[аеуы]|поясниц|шейн/],
+  ['Холестерин и сосуды', /холестерин|статин|сосуд|варикоз/],
+  ['Сердце и давление', /сердц|аритми|давлен/],
+  ['Сахар и диабет', /сахар|диаб|инсулин/],
+  ['Гормоны и щитовидка', /гормон|щ[ие]товид/],
+  ['Женское здоровье', /женск|эндометриоз|цистит|китаянк|красот/],
+  ['Стресс и эмоции', /тревог|стресс|страх|пуга|напугал|паническ|гнев|нервнича|плохие новости|медитац/],
+  ['Память, мозг, голова', /памят|(?<!второй )мозг|голов/],
+  ['Холод и мерзлячесть', /мерз|холод(?!ест)|закалив|согре|бане/],
+  ['Печень и пищеварение', /печен|желч|живот|кишечник|изжог|второй мозг/],
+  ['Почки', /почк/],
+  ['Зрение, слух, зубы', /зрени|слух|ушах|зуб/],
+  ['Долголетие и старение', /долголет|старен|старост|100 лет|после 40|пожил|35 и|старик|молодост|возраст|жить дольше|двигат|путешеств/],
+  ['Практики: точки, массаж, зарядка', /точк|массаж|иголк|иглоукалыв|зарядк|марафон|растира/],
+  ['Иммунитет и простуда', /иммунит|насморк|частых заболеван|сырост/],
+  ['Сон и энергия', /(^|[^а-яё])сон([^а-яё]|$)|биоритм|усталос|энерги|сил и/],
+  ['Здоровье детей', /ребен|ребён|дет[еия]/],
+  ['Питание', /питани|диет|(^|[^а-яё])пп([^а-яё]|$)|блин|кофе|калори|(^|[^а-яё])вес([^а-яё]|$)|холодное/],
+  ['Кожа, ногти, волосы', /ногт|грибок|волос|косметолог|потлив/],
+  ['Анализы и диагностика', /анализ|диагност|сигнал/],
+  ['Подход к здоровью и профилактика', /зож|ошибк|берутся болезни|о болезни|своим здоровьем|в здоровье|проблем со здоровьем|вылеч|врач|до диагноза|5000 лет|мифы|середин|привычк/],
+  ['Вопросы подписчиков', /вопрос от подписчик/],
+  ['Животные', /(^|[^а-яё])кош|собак|животн/],
+  ['Анонсы и поздравления', /поздравл|новым годом|8 марта|днем победы|журнал|премьер|лекарь|регат|проект|не поступила|приглашени|день сердца|день пожилого/],
+];
+const themesOf = p => { const t = low(p.topic); return THEMES.filter(([, re]) => re.test(t)).map(([name]) => name); };
+
+// Блок «Топ-10 тем»: ранжируем по средним просмотрам на публикацию
+function topThemes(list, hasSubs) {
+  const by = {};
+  list.forEach(p => themesOf(p).forEach(t => (by[t] = by[t] || []).push(p)));
+  let items = Object.entries(by).map(([t, l]) => ({ t, l, v: sum(l, 'views') / l.length, best: [...l].sort((a, b) => b.views - a.views)[0] }));
+  const multi = items.filter(x => x.l.length >= 2);
+  const minTwo = multi.length >= 10;
+  if (minTwo) items = multi;
+  items = items.sort((a, b) => b.v - a.v).slice(0, 10);
+  const mx = Math.max(1, ...items.map(x => x.v));
+  const untagged = list.filter(p => !themesOf(p).length).length;
+  return `<div class="card w12">
+      <h2>Топ-10 тем</h2>
+      <p class="hint">Темы определяются по словам в названии публикации; одна публикация может относиться к нескольким темам. Место — по средним просмотрам на публикацию${minTwo ? ', учитываются темы с двумя публикациями и больше' : ''}</p>
+      ${items.length ? `<div class="themes">${items.map((x, i) => `<div class="theme">
+        <div class="rank">${i + 1}</div>
+        <div class="tbody">
+          <div class="top"><span class="tname">${x.t}</span><b>${fmtN(x.v)}</b></div>
+          <div class="track"><div class="fill" style="width:${Math.max(2, x.v / mx * 100)}%"></div></div>
+          <div class="meta">${x.l.length} публ.${hasSubs && x.l.some(p => p.has.subs) ? ` · подписки +${fmtN(sum(x.l, 'subs'))}` : ''} · лучшая: ${/^«/.test(x.best.topic) ? esc(x.best.topic) : '«' + esc(x.best.topic) + '»'}, ${fmtN(x.best.views)} просм.</div>
+        </div></div>`).join('')}</div>` : '<p class="hint">За выбранный период публикаций нет.</p>'}
+      ${untagged ? `<div class="fnote">Без темы: ${untagged} публ. (не нашлось подходящих слов в названии).</div>` : ''}
+    </div>`;
 }
 
 function donut(parts, total) {
