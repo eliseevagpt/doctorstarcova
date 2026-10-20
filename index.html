@@ -136,7 +136,8 @@
   .post .ttl { font-weight: 600; font-size: 14px; line-height: 1.35; min-height: 2.7em; }
   .post .big { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
   .post .big span { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 4px; }
-  .post .stats { display: flex; gap: 16px; color: var(--muted); font-size: 13px; }
+  .post .stats { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 13px; }
+  .post .stats span { white-space: nowrap; }
   .post .stats b { color: var(--text); font-weight: 600; }
 
   .plan { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; align-items: start; }
@@ -185,7 +186,7 @@
   .tlist table.nets td { font-weight: 400; }
   .tlist table.nets td.tt { text-align: left; white-space: normal; min-width: 220px; }
   .tlist table.nets th:nth-child(2) { text-align: left; }
-  .tstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+  .tstats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; }
   .tstat { background: var(--bg); border-radius: 10px; padding: 10px 14px; }
   .tstat .label { color: var(--muted); font-size: 13px; }
   .tstat .v { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
@@ -202,6 +203,7 @@
     .tops { grid-template-columns: 1fr; }
     .themes { grid-template-columns: 1fr; }
     .tstats { grid-template-columns: 1fr 1fr; }
+    .tstats > .tstat:last-child:nth-child(odd) { grid-column: span 2; }
     .plan { grid-template-columns: 1fr; }
     .funnel { flex-direction: column; }
     .farrow { width: auto; flex-direction: row; gap: 8px; padding: 4px 0; }
@@ -1201,18 +1203,19 @@ function trialBlock(cur, all) {
         ${stat('Просмотры', fmtK(sum(tr, 'views')))}
         ${stat('Охват', fmtK(sum(tr, 'reach')))}
         ${stat('Подписки', '+' + fmtN(sum(tr, 'subs')))}
+        ${stat('Комментарии', fmtN(sum(tr, 'comments')))}
       </div>
       <div class="fnote" style="margin:0 0 12px">В среднем ${fmtN(avgV(tr))} просмотров на пробный ролик${usual.length ? `, у обычных рилс за тот же период — ${fmtN(avgV(usual))}` : ''}.</div>
       <div class="tops">${top.map((p, i) => `<div class="post">
         <div class="head"><span>${dmy(p.date)} · пробный рилс</span><span class="badge ${i === 0 ? 'viral' : 'strong'}">№${i + 1}</span></div>
         <div class="ttl">${esc(p.topic)}</div>
         <div class="big">${fmtN(p.views)}<span>просмотров</span></div>
-        <div class="stats"><span>охват <b>${fmtN(p.reach || 0)}</b></span><span>подписки <b>+${fmtN(p.subs)}</b></span><span>ER <b>${fmtP(erOf([p]))}</b></span></div>
+        <div class="stats"><span>охват <b>${fmtN(p.reach || 0)}</b></span><span>подписки <b>+${fmtN(p.subs)}</b></span><span>комм. <b>${fmtN(p.comments)}</b></span><span>ER <b>${fmtP(erOf([p]))}</b></span></div>
       </div>`).join('')}</div>
       <details class="tlist"><summary>Все пробные рилс за период (${tr.length})</summary>
-        <div class="tbl-wrap"><table class="nets"><thead><tr><th>Дата</th><th>Ролик</th><th>Просмотры</th><th>Охват</th><th>Подписки</th></tr></thead>
-        <tbody>${[...tr].sort((a, b) => b.date - a.date).map(p => `<tr><td>${dmy(p.date)}</td><td class="tt">${esc(p.topic)}</td><td>${fmtN(p.views)}</td><td>${fmtN(p.reach || 0)}</td><td>+${fmtN(p.subs)}</td></tr>`).join('')}
-        <tr class="total"><td>Итого</td><td></td><td>${fmtN(sum(tr, 'views'))}</td><td>${fmtN(sum(tr, 'reach'))}</td><td>+${fmtN(sum(tr, 'subs'))}</td></tr></tbody></table></div>
+        <div class="tbl-wrap"><table class="nets"><thead><tr><th>Дата</th><th>Ролик</th><th>Просмотры</th><th>Охват</th><th>Подписки</th><th>Комментарии</th></tr></thead>
+        <tbody>${[...tr].sort((a, b) => b.date - a.date).map(p => `<tr><td>${dmy(p.date)}</td><td class="tt">${esc(p.topic)}</td><td>${fmtN(p.views)}</td><td>${fmtN(p.reach || 0)}</td><td>+${fmtN(p.subs)}</td><td>${fmtN(p.comments)}</td></tr>`).join('')}
+        <tr class="total"><td>Итого</td><td></td><td>${fmtN(sum(tr, 'views'))}</td><td>${fmtN(sum(tr, 'reach'))}</td><td>+${fmtN(sum(tr, 'subs'))}</td><td>${fmtN(sum(tr, 'comments'))}</td></tr></tbody></table></div>
       </details>`
       : `<p class="hint">За выбранный период пробных рилс нет. Всего в таблице: ${all.filter(p => p.trial).length} — выберите «Все время».</p>`}
     </div>`;
