@@ -77,6 +77,8 @@
     padding: 14px 18px;
   }
   .w3 { grid-column: span 3; } .w6 { grid-column: span 6; } .w12 { grid-column: span 12; }
+  .kpis { grid-column: span 12; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .kpis > .card { grid-column: auto; }
   .card h2 { margin: 0 0 2px; font-size: 15px; font-weight: 600; }
   .card .hint { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
 
@@ -195,6 +197,8 @@
   @media (max-width: 860px) {
     .grid { grid-template-columns: 1fr 1fr; }
     .w3 { grid-column: span 1; } .w6, .w12 { grid-column: span 2; }
+    .kpis { grid-column: span 2; grid-template-columns: 1fr 1fr; }
+    .kpis > .card:last-child:nth-child(odd) { grid-column: span 2; }
     .tops { grid-template-columns: 1fr; }
     .themes { grid-template-columns: 1fr; }
     .tstats { grid-template-columns: 1fr 1fr; }
@@ -924,7 +928,9 @@ function render() {
   const bCur = bioOf(cur), bPrev = prev ? bioOf(prev) : null;
   const cNow = sum(bCur, 'bio'), cPrev = bPrev && bPrev.length ? sum(bPrev, 'bio') : (prev ? undefined : null);
 
-  let html = `<div class="grid">
+  const kNow = sum(cur, 'comments'), kPrev = pOk ? sum(prev, 'comments') : null;
+
+  let html = `<div class="grid"><div class="kpis">
     <div class="card w3 kpi">
       <div class="label">Подписчики${lastSubs ? ' · всего ' + fmtN(lastSubs) : ''}</div>
       <div class="value">+${fmtN(sNow)}</div>
@@ -945,7 +951,12 @@ function render() {
       <div class="value">${bCur.length ? fmtN(cNow) : '—'}</div>
       ${!bCur.length ? '<div class="delta flat">в таблице пока не заполнено</div>'
         : bCur.length < cur.length ? `<div class="delta flat">заполнено у ${bCur.length} из ${cur.length} публ.</div>` : delta(cNow, cPrev, rng)}
-    </div>`;
+    </div>
+    <div class="card w3 kpi">
+      <div class="label">Комментарии${cur.length ? ' · ' + fmtN(kNow / cur.length).replace(/^0$/, '<1') + ' на публ.' : ''}</div>
+      <div class="value">${fmtN(kNow)}</div>
+      ${delta(kNow, kPrev, rng)}
+    </div></div>`;
 
   // --- Рост подписчиков по неделям
   html += `<div class="card w12">
@@ -1037,11 +1048,11 @@ function renderOthers(cur, prev, rng) {
   const kpi = (label, val, cur, prev, pct) => `<div class="card w3 kpi"><div class="label">${label}</div>
       <div class="value">${val}</div>${delta(cur, prev, rng, pct)}</div>`;
   const vNow = sum(cur, 'views'), lNow = sum(cur, 'likes'), cNow = sum(cur, 'comments'), eNow = erV(cur);
-  let html = `<div class="grid">
+  let html = `<div class="grid"><div class="kpis">
     ${kpi('Просмотры', fmtK(vNow), vNow, pv(l => sum(l, 'views')))}
     ${kpi('Реакции и лайки', fmtN(lNow), lNow, pv(l => sum(l, 'likes')))}
     ${kpi('Комментарии', fmtN(cNow), cNow, pv(l => sum(l, 'comments')))}
-    ${kpi('Вовлеченность от просмотров', eNow.toFixed(1).replace('.', ',') + '<small>%</small>', eNow, pv(erV), true)}`;
+    ${kpi('Вовлеченность от просмотров', eNow.toFixed(1).replace('.', ',') + '<small>%</small>', eNow, pv(erV), true)}</div>`;
 
   // Микс контента: клипы, посты, видео
   const FMT_COLOR = { 'Посты': 'var(--gold)', 'Клипы': 'var(--plum)', 'Видео': 'var(--red)' };
